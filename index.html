@@ -43,7 +43,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 .screen{display:none;position:fixed;inset:0;z-index:10;overflow-y:auto;background:var(--bg)}
 .screen.active{display:block;animation:fadeIn .2s ease both}
-#cloudAuthScreen.active{display:flex;}
+#cloudAuthScreen.active{display:flex!important;}
 #loginScreen.active{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:40px 20px 40px}
 .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .login-logo-icon{width:44px;height:44px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 14px rgba(58,107,78,.3)}
@@ -347,10 +347,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ── CLOUD AUTH SCREEN ── */
-#cloudAuthScreen{display:block;padding:40px 20px 40px;background:var(--bg);min-height:100vh;text-align:center}
-#cloudAuthScreen .login-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:8px}
-#cloudAuthScreen .auth-card{margin:0 auto;text-align:left;border:2px solid var(--accent) !important;box-shadow:0 4px 24px rgba(0,0,0,0.18) !important}
-.auth-card{width:100%;max-width:360px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:28px 24px;box-shadow:var(--sh-lg)}
+#cloudAuthScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px;background:var(--bg);text-align:center}
+#cloudAuthScreen .login-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:6px}
+#cloudAuthScreen .login-tagline{margin-bottom:32px}
+#cloudAuthScreen .auth-card{margin:0 auto;text-align:left;box-shadow:0 4px 24px rgba(0,0,0,0.12) !important}
+.auth-card{width:100%;max-width:360px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:28px 24px;box-shadow:var(--sh-lg);box-sizing:border-box}
 .auth-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin-bottom:4px}
 .auth-sub{font-size:.8rem;color:var(--fg3);margin-bottom:24px}
 .auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px}
