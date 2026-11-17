@@ -506,6 +506,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
         <div class="field"><label>Started</label><input type="date" id="f_started"></div>
       </div>
       <div class="field"><label>Cover emoji</label><div class="emoji-row" id="emojiRow"></div></div>
+      <div class="field"><label>Study questions</label>
+        <select id="f_qcount">
+          <option value="5">5 questions</option>
+          <option value="10">10 questions</option>
+          <option value="15">15 questions</option>
+          <option value="20" selected>20 questions</option>
+          <option value="30">30 questions</option>
+          <option value="40">40 questions</option>
+          <option value="50">50 questions</option>
+        </select>
+      </div>
       <input type="hidden" id="f_editId">
       <button type="submit" class="btn btn-primary" style="width:100%;padding:13px;margin-top:6px" id="modalSubmit">Add book</button>
     </form>
@@ -517,10 +528,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title"><span>Manage</span><button class="modal-close" onclick="closeAdmin()">✕</button></div>
-    <!-- API Key section -->
-    <div class="api-section">
+    <!-- API Key section (hidden from users) -->
+    <div class="api-section" style="display:none">
       <div class="api-label">Study questions <span class="api-badge" id="apiBadge">Off</span></div>
-      <div id="apiHouseholdNote" style="display:none;font-size:.74rem;padding:7px 10px;border-radius:7px;background:var(--accent-soft);color:var(--accent-mid);margin-bottom:8px;font-weight:500">Connected — questions generate automatically for each book.</div>
+      <div id="apiHouseholdNote" style="display:none"></div>
       <div class="api-input-row">
         <input class="api-input" id="apiKeyInput" type="password" placeholder="API key…">
         <button class="btn btn-primary btn-sm" onclick="saveApiKey()">Save</button>
@@ -1199,7 +1210,7 @@ function deleteBook(id) {
   if (currentUser) fsDeleteBook(currentUser.id, id).catch(()=>{});
 }
 
-const HOUSEHOLD_KEY = '';
+const HOUSEHOLD_KEY = 'AQ.Ab8RN6KQepF5_TXw-kO_VtFOyCFS8ItbVAifllJ6MsOf8bW6WQ';
 function getApiKey() { return load('gemini_key','') || HOUSEHOLD_KEY; }
 function saveApiKey2(k) { store('gemini_key', k); }
 
@@ -1419,15 +1430,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // ════════════════════════════
 //  GEMINI AI
 // ════════════════════════════
-async function fetchAIQuestions(title, author, genre) {
+async function fetchAIQuestions(title, author, genre, qcount) {
   const key = getApiKey();
   if (!key) return null;
+  const n = qcount || 20;
   try {
-    const prompt = 'Generate exactly 20 deep, specific study questions for the book "'+title+'"'+(author?' by '+author:'')+' (genre: '+genre+').\n\nRequirements:\n- Questions must be specific to THIS book\n- Mix question types: character analysis, thematic depth, structural choices, moral dilemmas\n- No yes/no questions\n\nRespond ONLY with a JSON array of exactly 20 strings.';
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key, {
+    const prompt = 'Generate exactly '+n+' deep, specific study questions for the book "'+title+'"'+(author?' by '+author:'')+' (genre: '+genre+').\n\nRequirements:\n- Questions must be specific to THIS book\n- Mix question types: character analysis, thematic depth, structural choices, moral dilemmas\n- No yes/no questions\n\nRespond ONLY with a JSON array of exactly '+n+' strings.';
+    const isBearer = key.startsWith('AQ.');
+    const url = isBearer
+      ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+      : 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key;
+    const headers = {'Content-Type':'application/json'};
+    if (isBearer) headers['Authorization'] = 'Bearer '+key;
+    const res = await fetch(url, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.8,maxOutputTokens:2048}})
+      headers,
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.8,maxOutputTokens:4096}})
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -1435,7 +1453,7 @@ async function fetchAIQuestions(title, author, genre) {
     const match = text.match(/\[[\s\S]*\]/);
     if (!match) return null;
     const qs = JSON.parse(match[0]);
-    if (Array.isArray(qs) && qs.length >= 10) return qs.slice(0,20);
+    if (Array.isArray(qs) && qs.length >= 5) return qs.slice(0,n);
     return null;
   } catch(e) { return null; }
 }
@@ -1443,19 +1461,20 @@ async function fetchAIQuestions(title, author, genre) {
 async function autoGenerateQuestionsIfNeeded(bookId) {
   const b = books[bookId];
   if (!b || (b.questions && b.questions.length > 0)) return;
+  const qcount = b.qcount || 20;
   if (!getApiKey()) {
-    const qs = getQuestionsForBook(b.title, b.genre||'nonfiction').map(text => ({text, answer:''}));
+    const qs = getQuestionsForBook(b.title, b.genre||'nonfiction').slice(0, qcount).map(text => ({text, answer:''}));
     saveBook(bookId, {...b, questions:qs, questionsSource:'template'});
     return;
   }
-  const aiQs = await fetchAIQuestions(b.title, b.author, b.genre||'nonfiction');
+  const aiQs = await fetchAIQuestions(b.title, b.author, b.genre||'nonfiction', qcount);
   const fresh = books[bookId];
   if (!fresh) return;
   if (aiQs) {
     saveBook(bookId, {...fresh, questions:aiQs.map(text=>({text,answer:''})), questionsSource:'ai'});
-    showToast('✨ AI questions ready for "'+b.title.slice(0,22)+(b.title.length>22?'…':'"'));
+    showToast(qcount+' questions ready for "'+b.title.slice(0,22)+(b.title.length>22?'…':'"'));
   } else {
-    const qs = getQuestionsForBook(b.title, b.genre||'nonfiction').map(text=>({text,answer:''}));
+    const qs = getQuestionsForBook(b.title, b.genre||'nonfiction').slice(0, qcount).map(text=>({text,answer:''}));
     saveBook(bookId, {...fresh, questions:qs, questionsSource:'template'});
   }
   if (curDetailId === bookId) renderDetail(bookId);
@@ -1828,7 +1847,7 @@ function studyHTML(b){
 
   const autoBtn=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="loadGenreQuestions('${b.id}')">📚 Genre questions</button>
-    ${hasKey?`<button class="btn btn-primary btn-sm" id="aiQBtn" onclick="loadAIQuestions('${b.id}')">✨ AI questions for this book</button>`:''}
+    ${hasKey?`<button class="btn btn-primary btn-sm" id="aiQBtn" onclick="loadAIQuestions('${b.id}')">🔄 Regenerate questions</button>`:''}
   </div>`;
 
   const list=qs.length?qs.map((q,i)=>`<div class="q-card${q.answer?' answered':''}${openQIdx===i?' open':''}" id="qi-${i}">
@@ -1861,17 +1880,17 @@ async function loadAIQuestions(id){
   const b=books[id];if(!b)return;
   if((b.questions||[]).length>0&&!confirm('Replace existing questions with AI-generated ones?'))return;
   const btn=document.getElementById('aiQBtn');
-  if(btn){btn.disabled=true;btn.textContent='✨ Generating...';}
+  if(btn){btn.disabled=true;btn.textContent='Generating...';}
   const container=document.querySelector('.questions-wrap');
   const banner=document.createElement('div');
   banner.className='ai-banner';
-  banner.innerHTML='<div class="ai-spinner"></div> Asking Gemini about "'+esc(b.title)+'"…';
+  banner.innerHTML='<div class="ai-spinner"></div> Loading questions for "'+esc(b.title)+'"…';
   if(container)container.prepend(banner);
   const qs=await fetchAIQuestions(b.title,b.author,b.genre||'nonfiction');
   if(banner.parentNode)banner.parentNode.removeChild(banner);
   if(qs){
     const qObjs=qs.map(text=>({text,answer:''}));
-    saveBook(id,{...b,questions:qObjs}); showToast('AI questions ready ✓');
+    saveBook(id,{...b,questions:qObjs}); showToast('Questions ready ✓');
   } else {
     showToast('AI unavailable — using genre questions');
     const qObjs=getQuestionsForBook(b.title,b.genre||'nonfiction').map(text=>({text,answer:''}));
@@ -1935,6 +1954,7 @@ function openAddModal(id){
     document.getElementById('f_pages').value=b.pages||'';
     document.getElementById('f_status').value=b.status||'reading';
     document.getElementById('f_genre').value=b.genre||'nonfiction';
+    document.getElementById('f_qcount').value=b.qcount||20;
     document.getElementById('f_started').value=b.started||'';
     buildEmojiPicker(b.emoji||'📗');
   } else {
@@ -1962,6 +1982,7 @@ function submitBook(e){
   const editId=document.getElementById('f_editId').value;
   const id=editId||uidGen();
   const existing=editId?books[editId]:{};
+  const qcount = parseInt(document.getElementById('f_qcount').value)||20;
   const data={...existing,id,
     title:document.getElementById('f_title').value.trim(),
     author:document.getElementById('f_author').value.trim(),
@@ -1970,13 +1991,13 @@ function submitBook(e){
     genre:document.getElementById('f_genre').value,
     started:document.getElementById('f_started').value,
     emoji:selectedEmoji,
+    qcount,
     currentPage:existing.currentPage||0,
-    notes:existing.notes||[],questions:existing.questions||[],log:existing.log||[]
+    notes:existing.notes||[],questions:[],log:existing.log||[]
   };
   saveBook(id,data); closeModal();
   if(!editId){
     showToast('Book added ✓');
-    // Auto-generate questions in background (cached for offline use)
     setTimeout(()=>autoGenerateQuestionsIfNeeded(id), 400);
   }
   renderAll(); if(curDetailId===id)renderDetail(id);
@@ -2109,7 +2130,7 @@ function selectAvatarChange(id){
 
 
 // ══════════════════════════════════════════
-//  STATS — Deep Book Lover Analytics
+//  STATS
 // ══════════════════════════════════════════
 const GENRE_LABELS = {fantasy:'Fantasy',scifi:'Sci-Fi',nonfiction:'Non-Fiction',selfhelp:'Self-Help',history:'History',science:'Science',philosophy:'Philosophy',business:'Business',biography:'Biography',thriller:'Thriller',romance:'Romance',classics:'Classics',crime:'Crime & Mystery'};
 const GENRE_COLORS = {fantasy:'#6a3fa0',scifi:'#1a7abf',nonfiction:'#3a6b4e',selfhelp:'#c06030',history:'#8b6914',science:'#2a7a7a',philosophy:'#5a3a70',business:'#c03010',biography:'#4a6a30',thriller:'#2a1a0a',romance:'#b02060',classics:'#704a1a',crime:'#2c3e6b'};
@@ -2249,7 +2270,7 @@ function statsMonthlyCheckin(done, arr){
       </div>
     </div>`;
   }).join('');
-  return `<div class="s-section"><div class="s-title">📅 Monthly check-in</div><div class="month-cards">${items}</div></div>`;
+  return `<div class="s-section"><div class="s-title">📅 Monthly progress</div><div class="month-cards">${items}</div></div>`;
 }
 
 function statsGenreMap(arr, done){
@@ -2375,7 +2396,7 @@ function statsQADeep(arr, totalQ, totalAns){
     const tot=(b.questions||[]).length;
     const p=Math.round(ans/tot*100);
     const color=p>=80?'var(--accent)':p>=40?'var(--gold)':'var(--fg3)';
-    const src=b.questionsSource==='ai'?' ✨':'';
+    const src='';
     return`<div class="bar-item">
       <div class="bar-label" style="font-size:.7rem">${b.emoji||'📗'} ${esc(b.title.length>13?b.title.slice(0,12)+'…':b.title)}${src}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${color}"></div></div>
@@ -2389,7 +2410,7 @@ function statsQADeep(arr, totalQ, totalAns){
       <div class="kpi" style="flex:1;min-width:80px"><div class="kpi-num">${fully}</div><div class="kpi-label">Fully studied</div></div>
     </div>
     <div class="bar-row">${rows}</div>
-    <div style="font-size:.68rem;color:var(--fg3);margin-top:8px">✨ = AI-generated questions &nbsp;|&nbsp; ≥80% green &nbsp;|&nbsp; ≥40% amber</div>
+    <div style="font-size:.68rem;color:var(--fg3);margin-top:8px">≥80% green &nbsp;|&nbsp; ≥40% amber</div>
   </div>`;
 }
 
