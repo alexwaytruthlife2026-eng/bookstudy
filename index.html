@@ -98,6 +98,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 4px;border:none;background:transparent;cursor:pointer;color:var(--fg3);font-family:inherit;transition:color .15s}
 .bnav-btn:hover{color:var(--fg2)}.bnav-btn.active{color:var(--accent)}
 .bnav-icon{font-size:1.15rem;line-height:1}.bnav-label{font-size:.6rem;font-weight:600}
+#bnavProfileIcon img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);display:block}
+#bnav-profile.active #bnavProfileIcon img{border-color:var(--accent)}
 .page{display:none}.page.active{display:block;animation:fadeIn .2s ease both}
 .pad{padding:20px 16px}
 .stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
@@ -308,24 +310,24 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
 .um-del{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--fg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:color .15s,background .15s}
 .um-del:hover{color:var(--red);background:var(--red-soft)}
 /* Profile page */
-.profile-hero{display:flex;flex-direction:column;align-items:center;padding:28px 20px 20px;text-align:center}
-.profile-hero-avatar{width:88px;height:88px;border-radius:50%;border:3px solid var(--accent);overflow:hidden;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);cursor:pointer;position:relative;transition:transform .15s}
+.profile-hero{display:flex;flex-direction:column;align-items:center;padding:24px 20px 16px;text-align:center;border-bottom:1px solid var(--border-soft);margin-bottom:20px}
+.profile-hero-avatar{width:80px;height:80px;border-radius:50%;border:2.5px solid var(--accent);overflow:hidden;margin-bottom:10px;box-shadow:0 2px 16px rgba(0,0,0,.13);cursor:pointer;position:relative;transition:transform .15s}
 .profile-hero-avatar:hover{transform:scale(1.04)}
 .profile-hero-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-hero-avatar::after{content:'✎';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);color:#fff;font-size:1.3rem;opacity:0;border-radius:50%;transition:opacity .15s}
+.profile-hero-avatar::after{content:'✎';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);color:#fff;font-size:1.2rem;opacity:0;border-radius:50%;transition:opacity .15s}
 .profile-hero-avatar:hover::after{opacity:1}
-.profile-hero-name{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;margin-bottom:3px}
-.profile-hero-sub{font-size:.74rem;color:var(--fg3)}
-.profile-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.profile-quick-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .12s;text-align:left}
-.profile-quick-card:hover{border-color:var(--accent);box-shadow:var(--sh);transform:translateY(-2px)}
+.profile-hero-name{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin-bottom:2px}
+.profile-hero-sub{font-size:.72rem;color:var(--fg3)}
+.profile-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.profile-quick-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .12s;text-align:left;display:flex;align-items:center;gap:10px}
+.profile-quick-card:hover{border-color:var(--accent);box-shadow:var(--sh-sm);transform:translateY(-1px)}
 .profile-quick-card:active{transform:scale(.97)}
-.profile-quick-icon{font-size:1.5rem;margin-bottom:7px}
-.profile-quick-label{font-size:.78rem;font-weight:700;margin-bottom:2px}
-.profile-quick-desc{font-size:.68rem;color:var(--fg3);line-height:1.4}
+.profile-quick-icon{font-size:1.1rem;flex-shrink:0;width:28px;height:28px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.profile-quick-label{font-size:.76rem;font-weight:600;margin-bottom:1px}
+.profile-quick-desc{font-size:.62rem;color:var(--fg3);line-height:1.3}
 .profile-section{margin-bottom:20px}
-.profile-section-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--fg3);margin-bottom:10px}
-.avatar-change-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.profile-section-title{font-size:.72rem;font-weight:600;letter-spacing:.04em;color:var(--fg3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border-soft)}
+.avatar-change-grid{display:grid;grid-template-columns:repeat(5,minmax(0,68px));gap:10px;justify-content:start}
 .avatar-change-opt{width:100%;aspect-ratio:1;border-radius:50%;border:2.5px solid transparent;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .12s}
 .avatar-change-opt:hover{transform:scale(1.08)}
 .avatar-change-opt.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -455,7 +457,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
       <button class="bnav-btn active" id="bnav-library" onclick="goPage('library')"><div class="bnav-icon">📚</div><div class="bnav-label">Library</div></button>
       <button class="bnav-btn" onclick="openAddModal()"><div class="bnav-icon">＋</div><div class="bnav-label">Add book</div></button>
       <button class="bnav-btn" id="bnav-stats" onclick="goPage('stats')"><div class="bnav-icon">📊</div><div class="bnav-label">Stats</div></button>
-      <button class="bnav-btn" id="bnav-profile" onclick="goPage('profile')"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></button>
+      <button class="bnav-btn" id="bnav-profile" onclick="goPage('profile')"><div class="bnav-icon" id="bnavProfileIcon">👤</div><div class="bnav-label">Profile</div></button>
     </nav>
   </div>
 </div>
@@ -1295,16 +1297,27 @@ async function authLogin() {
 }
 
 // ── Login / Switch ──
+function updateBnavAvatar(user) {
+  const iconEl = document.getElementById(‘bnavProfileIcon’);
+  if (!iconEl) return;
+  const av = AVATAR_BY_ID[user.avatarId||’paul’] || AVATARS[0];
+  iconEl.innerHTML = ‘’;
+  const img = document.createElement(‘img’);
+  img.src = av.src; img.alt = av.label;
+  iconEl.appendChild(img);
+}
+
 async function loginAs(user) {
   currentUser = user;
   books = await fsGetBooks(user.id);
-  document.getElementById('topbarTitle').textContent = user.name + "’s library";
-  document.getElementById('cloudAuthScreen').classList.remove('active');
-  document.getElementById('appScreen').classList.add('active');
-  curLibTab='reading'; curDetailId=null;
-  document.getElementById('detailPage').classList.remove('open');
-  document.getElementById('adminBtn').style.display='flex';
-  goPage('library'); renderAll();
+  document.getElementById(‘topbarTitle’).textContent = user.name + "’s library";
+  document.getElementById(‘cloudAuthScreen’).classList.remove(‘active’);
+  document.getElementById(‘appScreen’).classList.add(‘active’);
+  curLibTab=’reading’; curDetailId=null;
+  document.getElementById(‘detailPage’).classList.remove(‘open’);
+  document.getElementById(‘adminBtn’).style.display=’flex’;
+  updateBnavAvatar(user);
+  goPage(‘library’); renderAll();
 }
 
 function switchUser() {
@@ -1405,6 +1418,7 @@ async function saveAvatarChange() {
   currentUser.avatarId = _pendingAvatar;
   await fsUpdateUser(currentUser.id, { avatarId: _pendingAvatar });
   showToast('Avatar updated ✓');
+  updateBnavAvatar(currentUser);
   renderProfilePage();
 }
 
@@ -2035,29 +2049,26 @@ function renderProfilePage(){
       <div class="profile-quick">
         <div class="profile-quick-card" onclick="goPage('stats')">
           <div class="profile-quick-icon">📊</div>
-          <div class="profile-quick-label">Full Stats</div>
-          <div class="profile-quick-desc">Pace, genre map, activity chart, insights</div>
+          <div><div class="profile-quick-label">Full Stats</div><div class="profile-quick-desc">Pace, genre map, activity</div></div>
         </div>
         <div class="profile-quick-card" onclick="goPage('stats','monthly')">
           <div class="profile-quick-icon">📅</div>
-          <div class="profile-quick-label">Monthly Review</div>
-          <div class="profile-quick-desc">What you read each month, Q&A progress</div>
+          <div><div class="profile-quick-label">Monthly Review</div><div class="profile-quick-desc">Monthly reads & progress</div></div>
         </div>
         <div class="profile-quick-card" onclick="goPage('stats','qa')">
           <div class="profile-quick-icon">💬</div>
-          <div class="profile-quick-label">Study Q&A</div>
-          <div class="profile-quick-desc">Completion by book, AI vs template</div>
+          <div><div class="profile-quick-label">Study Q&A</div><div class="profile-quick-desc">Questions by book</div></div>
         </div>
         <div class="profile-quick-card" onclick="goPage('stats','pace')">
           <div class="profile-quick-icon">⚡</div>
-          <div class="profile-quick-label">Reading Pace</div>
-          <div class="profile-quick-desc">Pages per day, fastest and slowest reads</div>
+          <div><div class="profile-quick-label">Reading Pace</div><div class="profile-quick-desc">Pages per day</div></div>
         </div>
       </div>
     </div>
 
     <div class="profile-section" id="avatarPickerSection">
       <div class="profile-section-title">Choose your avatar</div>
+
       <div class="avatar-change-grid" id="avatarChangeGrid"></div>
       <button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px" onclick="saveAvatarChange()">Save avatar</button>
     </div>
