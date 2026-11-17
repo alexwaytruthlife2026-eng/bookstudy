@@ -399,12 +399,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--f
     </div>
     <div class="auth-panel" id="panelReturn">
       <div class="auth-field">
-        <label>Your name</label>
-        <input class="auth-input" id="authReturnName" placeholder="e.g. Maria" autocomplete="off" oninput="authReturnNameChange()">
-      </div>
-      <div class="auth-field" id="authPinField" style="display:none">
         <label>Your 6-digit PIN</label>
-        <input class="auth-input" id="authPin" type="password" inputmode="numeric" maxlength="6" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="off">
+        <input class="auth-input" id="authPin" type="password" inputmode="numeric" maxlength="6" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="off" oninput="authPinInput()">
       </div>
       <div class="auth-err" id="authReturnErr"></div>
       <button class="auth-btn" id="authLoginBtn" onclick="authLogin()">Enter</button>
@@ -1156,6 +1152,12 @@ async function fsGetUser(name) {
   const d = snap.docs[0];
   return {id: d.id, ...d.data()};
 }
+async function fsGetUserByPin(pin) {
+  const snap = await db.collection('users').where('plainPin','==',pin.trim()).get();
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return {id: d.id, ...d.data()};
+}
 async function fsCreateUser(name, pinHash, plainPin, avatarId) {
   const ref = db.collection('users').doc();
   await ref.set({
@@ -1231,11 +1233,12 @@ function authShowTab(tab) {
   document.getElementById('panelReturn').classList.toggle('active', tab==='return');
   document.getElementById('authNewErr').textContent = '';
   document.getElementById('authReturnErr').textContent = '';
+  if (tab === 'return') { document.getElementById('authPin').value = ''; setTimeout(()=>document.getElementById('authPin').focus(),50); }
 }
-function authReturnNameChange() {
-  const name = document.getElementById('authReturnName').value.trim();
-  document.getElementById('authPinField').style.display = name.length >= 2 ? 'block' : 'none';
+function authPinInput() {
   document.getElementById('authReturnErr').textContent = '';
+  const pin = document.getElementById('authPin').value.trim();
+  if (pin.length === 6) authLogin();
 }
 
 async function authCreate() {
@@ -1274,22 +1277,14 @@ function authPinConfirmed() {
 }
 
 async function authLogin() {
-  const name = document.getElementById('authReturnName').value.trim();
-  const pin  = document.getElementById('authPin').value.trim();
-  if (!name) { document.getElementById('authReturnErr').textContent = 'Enter your name.'; return; }
+  const pin = document.getElementById('authPin').value.trim();
   if (!pin || pin.length !== 6) { document.getElementById('authReturnErr').textContent = 'Enter your 6-digit PIN.'; return; }
   const btn = document.getElementById('authLoginBtn');
   btn.disabled = true; btn.textContent = 'Checking…';
   try {
-    const user = await fsGetUser(name);
+    const user = await fsGetUserByPin(pin);
     if (!user) {
-      document.getElementById('authReturnErr').textContent = 'No account found with that name.';
-      btn.disabled = false; btn.textContent = 'Enter'; return;
-    }
-    const hash = hashPin(pin, name.toLowerCase().trim());
-    console.log('login hash check', hash, user.pin_hash);
-    if (hash !== user.pin_hash) {
-      document.getElementById('authReturnErr').textContent = 'Wrong PIN. Try again.';
+      document.getElementById('authReturnErr').textContent = 'No account found with that PIN.';
       btn.disabled = false; btn.textContent = 'Enter'; return;
     }
     loginAs(user);
