@@ -1061,6 +1061,7 @@ function getQuestionsForBook(title, genre) {
 //  STATE
 // ════════════════════════════
 let currentUser=null, books={}, curLibTab='reading', curDetailId=null;
+const ADMIN_PIN = '343707';
 let curDTab='notes', curNoteType='note', noteFilter='all', openQIdx=-1;
 let selectedEmoji='📗', selectedAvatarId=AVATARS[0].id;
 let pinInput='', pinTarget=null;
@@ -1289,7 +1290,7 @@ async function authLogin() {
       document.getElementById('authReturnErr').textContent = 'No account found with that PIN.';
       btn.disabled = false; btn.textContent = 'Enter'; return;
     }
-    loginAs(user);
+    loginAs(user, pin);
   } catch(e) {
     document.getElementById('authReturnErr').textContent = 'Connection error. Try again.';
     btn.disabled = false; btn.textContent = 'Enter';
@@ -1307,7 +1308,7 @@ function updateBnavAvatar(user) {
   iconEl.appendChild(img);
 }
 
-async function loginAs(user) {
+async function loginAs(user, enteredPin) {
   currentUser = user;
   books = await fsGetBooks(user.id);
   document.getElementById('topbarTitle').textContent = user.name + "'s library";
@@ -1315,7 +1316,8 @@ async function loginAs(user) {
   document.getElementById('appScreen').classList.add('active');
   curLibTab='reading'; curDetailId=null;
   document.getElementById('detailPage').classList.remove('open');
-  document.getElementById('adminBtn').style.display='flex';
+  const pin = enteredPin || user.plainPin || '';
+  document.getElementById('adminBtn').style.display = (pin === ADMIN_PIN) ? 'flex' : 'none';
   updateBnavAvatar(user);
   goPage('library'); renderAll();
 }
@@ -1606,7 +1608,7 @@ function pinKey(k){
 
 function checkPin(){
   if(!pinTarget)return;
-  if(hashPin(pinInput,pinTarget.id)===pinTarget.pin_hash){ loginAs(pinTarget); }
+  if(hashPin(pinInput,pinTarget.id)===pinTarget.pin_hash){ loginAs(pinTarget, pinTarget.plainPin); }
   else{
     pinInput=''; renderPinPanel(pinTarget,'','Wrong PIN — try again');
     document.querySelectorAll('.pin-dot').forEach(d=>{d.style.animation='shake .4s ease';setTimeout(()=>d.style.animation='',400);});
