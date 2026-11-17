@@ -1298,11 +1298,11 @@ async function authLogin() {
 
 // ── Login / Switch ──
 function updateBnavAvatar(user) {
-  const iconEl = document.getElementById(‘bnavProfileIcon’);
+  const iconEl = document.getElementById('bnavProfileIcon');
   if (!iconEl) return;
-  const av = AVATAR_BY_ID[user.avatarId||’paul’] || AVATARS[0];
-  iconEl.innerHTML = ‘’;
-  const img = document.createElement(‘img’);
+  const av = AVATAR_BY_ID[user.avatarId||'paul'] || AVATARS[0];
+  iconEl.innerHTML = '';
+  const img = document.createElement('img');
   img.src = av.src; img.alt = av.label;
   iconEl.appendChild(img);
 }
@@ -1310,14 +1310,14 @@ function updateBnavAvatar(user) {
 async function loginAs(user) {
   currentUser = user;
   books = await fsGetBooks(user.id);
-  document.getElementById(‘topbarTitle’).textContent = user.name + "’s library";
-  document.getElementById(‘cloudAuthScreen’).classList.remove(‘active’);
-  document.getElementById(‘appScreen’).classList.add(‘active’);
-  curLibTab=’reading’; curDetailId=null;
-  document.getElementById(‘detailPage’).classList.remove(‘open’);
-  document.getElementById(‘adminBtn’).style.display=’flex’;
+  document.getElementById('topbarTitle').textContent = user.name + "'s library";
+  document.getElementById('cloudAuthScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  curLibTab='reading'; curDetailId=null;
+  document.getElementById('detailPage').classList.remove('open');
+  document.getElementById('adminBtn').style.display='flex';
   updateBnavAvatar(user);
-  goPage(‘library’); renderAll();
+  goPage('library'); renderAll();
 }
 
 function switchUser() {
@@ -1327,9 +1327,7 @@ function switchUser() {
   document.getElementById('authCard').style.display = 'block';
   document.getElementById('pinRevealCard').style.display = 'none';
   document.getElementById('authName').value = '';
-  document.getElementById('authReturnName').value = '';
   document.getElementById('authPin').value = '';
-  document.getElementById('authPinField').style.display = 'none';
   document.getElementById('authNewErr').textContent = '';
   document.getElementById('authReturnErr').textContent = '';
   authShowTab('new');
